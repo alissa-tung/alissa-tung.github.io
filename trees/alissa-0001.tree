@@ -1,0 +1,20 @@
+\title{Contact Information}
+\author{alissatung}
+
+\import{base-macros}
+
+\let\row[k][v]{
+  \tr{
+    \td{\strong{\k:}}
+    \td{\v}
+  }
+}
+
+\table{
+  \row{GitHub}{
+    [gh:alissa-tung](https://github.com/alissa-tung)
+  }
+  \row{Email}{
+    alissa-tung <at/> outlook <dot/> com
+  }
+}

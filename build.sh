@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -eu -o pipefail
 
-forester build forest.toml --dev
+forester build forest.toml
