@@ -1,3 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -eu -o pipefail
 
-opam exec -- forester build --dev --root xxx-0001 trees/
+forester build forest.toml --dev
