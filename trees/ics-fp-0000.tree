@@ -1,0 +1,21 @@
+\title{Introduction To Computer Science: Functional Programming}
+\author{alissatung}
+
+\date{2024}
+\meta{venue}{Renmin University of China}
+
+\p{
+  这系列课程旨在介绍下列话题：
+  \ul{
+    \li{
+      如何构建可复现的系统：善事利器。
+      此类技能不仅可以用于配置更先进、更稳定的、用于日常计算机科学探索旅程的操作系统，
+      还可以帮助搭建可靠的、兼容性好的作业实验项目与团队软件工程项目。
+    }
+    \li{
+      函数式程序设计：介绍函数式程序设计中一些经典的优美理论，与函数式程序设计生态的现代工程化实践。
+    }
+  }
+}
+
+\transclude{ics-fp-0001}
