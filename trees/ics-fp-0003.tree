@@ -3,14 +3,49 @@
 
 \subtree{
   \title{Nix 是一个软件包管理器}
+
+  \pre{
+\startverb
+nix shell 'nixpkgs#clang'
+\stopverb
+  }
+  \pre{
+\startverb
+environment.systemPackages = with pkgs;
+  [
+    coreutils gnused
+    emacs
+    git gnumake
+    cmake gcc
+    fd bottom
+    nix-output-monitor
+  ]
+\stopverb
+  }
 }
 
 \subtree{
   \title{Nix 是一个项目构建工具}
+
+  \pre{
+\startverb
+nom build 'nixpkgs#emacs'
+\stopverb
+  }
 }
 
 \subtree{
-  \title{NixOS 是一个声明式 Linux 发行版}
+  \title{NixOS 是一个声明式的 Linux 发行版}
+
+  \pre{
+\startverb
+services.desktopManager.plasma6.enable = true;
+
+programs.git.config.init.defaultBranch = "main";
+
+services.gitlab.enable = true;
+\stopverb
+  }
 }
 
 \subtree{

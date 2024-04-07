@@ -22,3 +22,5 @@ latex/trees
 public
 server
 *.lock
+
+/result

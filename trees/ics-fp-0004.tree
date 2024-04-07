@@ -334,5 +334,59 @@ f { x = 10; y = 24; z = 0; }
 
   \subtree{
     \title{Type Checking, Option Handling and Module Evaluating of NixOS Configuration}
+
+    \pre{
+\startverb
+lib.mkForce
+lib.mkDefault
+lib.mkOverride 900
+\stopverb
+    }
+
+    \pre{
+\startverb
+options = {
+  name = mkOption {
+    type = type specification;
+    default = default value;
+    example = example value;
+    description = lib.mdDoc "Description for use in the NixOS manual.";
+  };
+};
+\stopverb
+    }
+
+    \pre{
+\startverb
+extraRules = mkOption {
+  type = with types; listOf (submodule {
+    options = {
+      users = mkOption {
+        type = with types; listOf (either str int);
+        description = mdDoc ''
+          The usernames / UIDs this rule should apply for.
+        '';
+        default = [];
+      };
+
+      groups = mkOption {
+        type = with types; listOf (either str int);
+        description = mdDoc ''
+          The groups / GIDs this rule should apply for.
+        '';
+        default = [];
+      };
+
+      host = mkOption {
+        type = types.str;
+        default = "ALL";
+        description = mdDoc ''
+          For what host this rule should apply.
+        '';
+      };
+
+      ... ...
+\stopverb
+    }
   }
 }

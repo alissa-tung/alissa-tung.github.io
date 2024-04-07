@@ -1,5 +1,12 @@
 \title{善事利器：Nix 与 NixOS}
 \author{alissatung}
 
+\p{
+  [Old Slides](./fp-ruc-0.pdf)
+}
+\p{
+  [Old Notes](https://alissa-tung.github.io/ics-fp/#/page/ics-fp-1)
+}
+
 \transclude{ics-fp-0003}
 \transclude{ics-fp-0004}
