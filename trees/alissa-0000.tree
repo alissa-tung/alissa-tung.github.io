@@ -14,4 +14,9 @@
     \put\transclude/title{Teaching Materials}
     \transclude{alissa-0002}
   }
+
+  \scope{
+    \put\transclude/title{Preface}
+    \transclude{alissa-0003}
+  }
 }

@@ -1,7 +1,9 @@
 \title{Teaching Materials}
 \author{alissatung}
 
-\put\transclude/numbered{false}
-\put\transclude/metadata{true}
+\scope{
+  \put\transclude/numbered{false}
+  \put\transclude/metadata{true}
 
-\transclude{ics-fp-0000}
+  \transclude{ics-fp-0000}
+}

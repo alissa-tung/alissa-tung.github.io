@@ -1,0 +1,338 @@
+\title{Nix is All About Syntax Trees and Interpreters}
+\author{alissatung}
+
+\import{base-macros}
+
+\p{
+  We describe many kind of software engineering solutions in terms of the Nix programming language,
+  which is purely functional, solve problems in a declarative manner.
+  The powerful abilities and abstractions are driven by merely two simple, minimal and elegant constructions in the Nix language, that is:
+  \ul{
+    \li{the \strong{attribute set}s; and}
+    \li{the \strong{lambda}s.}
+  }
+}
+
+\p{
+  The following contents demonstrate how to use the \em{syntax tree - interpreter} pattern to explain how Nix is used to configure and build different kinds of targets,
+  for example, software package and NixOS system closures. We will also cover some frequently asked questions about the NixOS system configuration,
+  including explaining \strong{what is and why Nix Flakes}, also using this \em{syntax tree - interpreter} pattern.
+}
+
+\subtree{
+  \title{Starting at the Beginning: The Nix Language}
+
+  \p{
+    Since Nix langauge is a purely functional programming language,
+    all constructions in the language are expressions,
+    which can be evaluate to value.
+    There is no mutable states, imperative statements and control flow primitives in the langauge.
+  }
+
+  \p{
+    A file with name extension \code{.nix} that contains a single Nix expression is usually called a \em{Nix module} (not the same as \em{NixOS module}).
+  }
+
+  \subtree{
+    \title{Attribute Set}
+
+    \p{In Nix language, the data type attribute sets is like [JSON](https://www.json.org/): an attribute set is a collection of name-value-pairs (called attributes) enclosed in curly brackets.}
+    \pre{
+\startverb
+{
+  x = 42;
+  t = "hello";
+  p = ./shell.nix;
+  xs = [2 3 5 7 11 13 17 19];
+  ys = {
+    sysT = "nat";
+    sysF = "lambda" + "2";
+    zs = [];
+  };
+}
+\stopverb}
+  }
+
+    \p{It can express a little more things than JSON: the value in an attribute set can be a lambda (function).}
+    \p{The Nix language aims at \em{manipulating attribute sets}, there are some operations:
+      \ul{
+        \li{attributes can be accessed with the \code{.} operator}
+        \li{
+          the \code{//} operator, where expression \code{xs0 // xs1} returns an attribute set which have of all the attributes in \code{xs0} and \code{xs1}.
+          If an attribute name is present in both, the attribute value from the latter is taken.
+          \ul{
+            \li{(not mention the \code{__functor} attribute here, since we have not introduce the lambda)}
+          }
+        }
+      }
+    }
+    \p{
+      This is nearly all about attribute sets in the Nix language.
+      We can play with them in the \code{nix repl}.
+      If you are first to the Nix language, the Nix language manual and other material will introduce more convenient and advanced features about the attribute sets. For example:
+      \ul{
+        \li{the \code{rec} keyword}
+        \li{the \code{inherit} keyword}
+        \li{the \code{with} keyword}
+      }
+    }
+    \p{
+      Since Nix is a purely functional programming language,
+      it is natural that all data structures in the Nix language, including attribute sets, are immutable.
+      That is, all functions operating on attribute sets will not modify the value of its input parameters,
+      but return a newly created attribute set instead.
+    }
+
+  \subtree{
+    \title{#{\lambda}}
+
+    \p{
+      The lambdas is a neat way to express the concept of computation,
+      also a convenient tool to to define pure, mathematical functions.
+      The name lambda is directly taken from the underlaying theorem foundation \em{untyped #{\lambda}-calculus}.
+    }
+    \p{
+      While the attribute sets is suitable for describing simple or complex structural data,
+      the lambdas aims at describing the transformations between attribute sets (and primitive values).
+    }
+    \p{
+      Analogous to attribute sets, the lambdas is also a powerful notion with a few rules to define it (We can also play with them in the \code{nix repl}):
+      \ul{
+        \li{
+          \p{\em{(function abstraction, define a function)}}
+
+          \p{
+            \code{x : x + 42}
+            \ul{
+              \li{\code{x : x + 42} is a lambda (also a ordinary expression in Nix language)}
+              \li{\code{:} is the symbol for declaring lambdas}
+              \li{before symbol \code{:} is the input parameters of the function}
+              \li{after symbol \code{:} is the body of the function, contains an expression may or may not contains the occurrences of binding variable before the symbol \code{:}}
+            }
+          }
+        }
+        \li{
+          \p{\em{(name binding, define a variable)}}
+          \p{
+            \code{f = x : x + 42} states the identifier \code{f} is defined to be the abbreviation of the lambda \code{x : x + 42}.
+            \em{referential transparency}: when reasoning about Nix programs, the occurrence of term \code{f} in the above context can always be substituted by \code{x : x + 42}, vice versa, which works as any other mathematical functions.
+          }
+        }
+        \li{
+          \p{\em{(function application, reduce a computation)}}
+          \ul{
+            \li{
+              consider a function \code{f}, or \code{x : ...} where \code{...} is a place holder for any expression may or may not contains the occurrences  of variable \code{x}
+            }
+            \li{
+              consider a term \code{x}, or any other more complex construction that is a valid Nix expression
+            }
+            \li{
+              \p{
+                \p{
+                  put them in juxtaposition, \code{f x} (or more complex construction, exactly the same thing by referential transparency, or to say, one can always represent complex constructions in simple terms by first naming it, then substitute) stands for a \em{function application}; the actually computation part is called \em{reduction}. Consider the following example:
+                }
+                \pre{
+\startverb
+nix-repl> f = x : x + 42
+
+nix-repl> f 0
+42
+
+nix-repl> g = x : "x = " + x
+
+nix-repl> g "42"
+"x = 42"
+\stopverb
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    \p{
+      The above three rules nearly all about lambdas in the Nix language,
+      similar constructions also applies to the untyped #{\lambda}-calculus.
+    }
+  }
+
+  \subtree{
+    \title{Put The Two Together: The Nix Programming Langauge}
+
+    \p{
+      Everything in the Nix programming language are exactly one of the three kind of terms: attribute set, lambda, or primitive data values (booleans, strings, numbers, ...).
+      Hence we can say, \strong{everything in the Nix language is about attribute sets and lambdas}.
+    }
+
+    \p{
+      The attribute sets are used to represent simple or complex \em{structure}s, while the lambdas are used to represent simple or complex \em{computation}s.
+      And they extends the expressive power of another one each other.
+    }
+
+    \subtree{
+      \title{Use lambdas to Extend Attribute Sets}
+
+      \p{Recalls that attribute sets can express a little more things than JSON: the value in an attribute set can be a lambda.}
+
+      \ul{
+        \li{
+          \p{
+            If a attribute set contains a attribute named \code{__functor}, whose value is callable, can be applied as if it were a function, with the set itself passed in first, which can be used to attach metadata to a function without the caller needing to treat it specially.
+          }
+          \pre{
+  \startverb
+  nix-repl> let
+              add = {__functor = self: x: x + self.x;};
+              inc = add // {x = 1;};
+            in
+              inc 1
+
+  2
+  \stopverb
+          }
+        }
+        \li{
+          \p{If a attribute set contains a attribute named \code{__toString}, whose value is called string-interpolatable, can be used in string interpolation.}
+          \p{
+            There is also a \code{outPath} for similar usages, the difference is:
+
+            \ul{
+              \li{
+                \code{__toString : Self -> String}
+              }
+              \li{
+                \code{outPath : String}
+              }
+            }
+          }
+        }
+      }
+    }
+
+    \subtree{
+      \title{Use Attribute Sets to Extend lambdas}
+
+      \p{
+        The lambdas is used for introducing \strong{unary} functions.
+        From the rules for lambdas we stated earlier, we can express functions with multiple arguments in form of \code{f = x : y : z : ...}, and represent their function application (or partial application) in form of \code{f x y z}, but what about:
+      }
+
+      \ul{
+        \li{
+          \em{named arguments}:
+          The applications that takes multiple may suppose to be modified, to have a clear code structure, it is needed to have the ability to pass all arguments required by a function at once, and even better, give each argument semantic names and required them to be annotated when constructing function applications. We use attribute sets to express such two requirements.
+          \pre{
+\startverb
+f = x: y: z: (x + y * z + 42) * y + y * (x - z)
+f 12 24 0 -- application
+((f 12) 24) 0
+f 12 24 -- partial application
+
+xs = { x = 12; y = 24; z = 0; }
+f xs.x xs.y xs.z -- application
+\stopverb
+          }
+          \pre{
+\startverb
+f = { x, y, z } : (x + y * z + 42) * y + y * (x - z)
+f { x = 12; y = 24; z = 0; }
+
+g = xs : (xs.x + xs.y * xs.z + 42) * xs.y + xs.y * (xs.x - xs.z)
+g { x = 12; y = 24; z = 0; }
+
+h = { x, y, z }@xs : (x + y * xs.z + 42) * xs.y + xs.y * (xs.x - xs.z)
+h { x = 12; y = 24; z = 0; }
+\stopverb
+          }
+        }
+        \li{
+          \em{optional arguments}:
+          If a function has multiple arguments, one would sometimes hope some of the arguments are optional, that is, if the specify value of some arguments are not given, there are default values for missing ones. We also use attribute sets to express the requirement.
+          \pre{
+\startverb
+f = { x, y ? 0, z ? 42 } : (x + y * z + 42) * y + y * (x - z)
+f { x = 1; }
+f { x = 10; y = 24; z = 0; }
+\stopverb
+          }
+        }
+        \li{
+          \em{arguments ignore wildcard}:
+          It is common to pass some attribute sets around multiple functions.
+          sometimes not all attributes will be used in the function.
+          In order to make the input constraints of such functions more flexible,
+          one would write something like \code{f = { x, y ? 0, z ? 42, ... }},
+          use the \code{...} syntax
+          to ignore attributes are not \code{x}, \code{y} and \code{z} when
+          applying function parameters.
+        }
+      }
+    }
+  }
+}
+
+\subtree{
+  \title{Building and Evaluating Domain-Specific Languages}
+
+  \p{
+    A domain-specific language (DSL) is a computer language specialized to a particular application domain.
+    A DSL is consists of a syntax tree and some interpreters.
+  }
+
+  \p{
+    In the ecosystem of Nix,
+    many software engineering problems can be solved by
+    finding a suitable DSL abstraction for the purpose:
+    First construct the syntax tree instance using its builders,
+    then run the suitable interpreter to evaluating the syntax and get the result.
+  }
+
+  \subtree{
+    \title{Syntax Tree}
+    \taxon{definition}
+
+    \p{
+      A \em{Syntax Tree} is a function (lambda) that takes an attribute set as input,
+      produce an attribute set as output, with some constraints on its input/output
+      attribute sets (that is, the input/output sets should contains given required attribute,
+      and the value of such attributes should satisfy some predicates on them).
+    }
+  }
+
+  \subtree{
+    \title{Interpreter}
+    \taxon{definition}
+
+    \p{
+      An \em{Interpreter} is either a Nix function that consumes the given syntax tree,
+      produces some Nix expressions,
+      or a computer program that traverses the syntax tree, runs some real world actions with effects,
+      for example, building some artifacts.
+    }
+  }
+}
+
+\subtree{
+  \title{Examples of Syntax Trees and Interpreters}
+
+  \subtree{
+    \title{Derivation}
+  }
+
+  \subtree{
+    \title{Nix Flake}
+  }
+
+  \subtree{
+    \title{NixOS Configuration}
+  }
+
+  \subtree{
+    \title{disko: declarative disk partitioning, formatting and mounting}
+  }
+
+  \subtree{
+    \title{Type Checking, Option Handling and Module Evaluating of NixOS Configuration}
+  }
+}
