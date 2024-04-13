@@ -1,6 +1,8 @@
 \title{善事利器：Nix 与 NixOS}
 \author{alissatung}
 
+\transclude{todo}
+
 \p{
   [Old Slides](./fp-ruc-0.pdf)
 }

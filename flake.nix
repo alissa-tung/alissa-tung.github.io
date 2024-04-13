@@ -19,15 +19,5 @@
   }:
     flake-utils.lib.eachDefaultSystem (system: let
       pkgs = nixpkgs.legacyPackages.${system};
-    in {
-      devShell = pkgs.mkShell {
-        buildInputs = with pkgs; [
-          forester.packages.${system}.default
-          texlive.combined.scheme-full
-          fswatch
-
-          yamlfmt
-        ];
-      };
-    });
+    in {devShell = import ./shell.nix {inherit pkgs system forester;};});
 }

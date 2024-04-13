@@ -5,5 +5,7 @@
   \put\transclude/numbered{false}
   \put\transclude/metadata{true}
 
+  \transclude{pku-lean-0000}
+  \transclude{pku-lean-0001}
   \transclude{ics-fp-0000}
 }
